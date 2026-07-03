@@ -4,6 +4,8 @@ from src.ats_score import calculate_ats_score
 from src.gemini_helper import analyze_resume
 from src.jd_matcher import calculate_jd_match
 from src.interview_generator import generate_interview_questions
+from src.cover_letter_generator import generate_cover_letter
+
 
 # Page Configuration
 st.set_page_config(
@@ -80,6 +82,12 @@ if resume_file:
                 resume_text,
                 jd_text
             )
+    if jd_text:
+        with st.spinner("Generating Cover Letter..."):
+            cover_letter = generate_cover_letter(
+            resume_text,
+            jd_text
+        )
 
     # Resume Preview
     st.subheader("📄 Resume Text Preview")
@@ -136,6 +144,19 @@ if resume_file:
         st.subheader("🎤 AI Interview Questions")
 
         st.markdown(interview_questions)
+
+        st.divider()
+
+        st.subheader("📄 AI Cover Letter")
+
+        st.markdown(cover_letter)
+
+        st.download_button(
+            label="📥 Download Cover Letter",
+            data=cover_letter,
+            file_name="cover_letter.txt",
+            mime="text/plain"
+        )
 
 # JD Upload Confirmation
 if jd_text:
