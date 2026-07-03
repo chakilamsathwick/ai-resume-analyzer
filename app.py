@@ -6,6 +6,9 @@ from src.jd_matcher import calculate_jd_match
 from src.interview_generator import generate_interview_questions
 from src.cover_letter_generator import generate_cover_letter
 from src.resume_rating import get_resume_rating
+from src.charts import skills_pie_chart,score_bar_chart
+from src.pdf_report import generate_pdf_report
+from src.skill_recommender import recommend_skills
 
 # ---------------------------------------------------
 # PAGE CONFIG
@@ -119,11 +122,13 @@ if resume_file:
     if run_ats:
 
         score, skills_found = calculate_ats_score(resume_text)
+        st.session_state["ats_score"]=score 
+
 
         st.subheader("📊 ATS Analysis")
 
         st.metric("ATS Score", f"{score}%")
-        
+
         rating = get_resume_rating(score)
 
         st.success(f"Resume Rating: {rating}")
@@ -137,6 +142,8 @@ if resume_file:
                 st.success(skill)
         else:
             st.warning("No skills detected.")
+        st.session_state["skills"] = skills_found
+        st.session_state["ats_score"] = score
 
     # ------------------------------------------------
     # AI ANALYSIS
@@ -152,6 +159,7 @@ if resume_file:
             expanded=True
         ):
             st.markdown(ai_analysis)
+        st.session_state["ai_analysis"] = ai_analysis
 
     # ------------------------------------------------
     # JD MATCH
@@ -176,6 +184,26 @@ if resume_file:
 
             st.progress(match_score / 100)
 
+            chart1 = skills_pie_chart(
+                matched_skills,
+                missing_skills
+            )
+
+            st.plotly_chart(
+                chart1,
+                use_container_width=True
+            )
+
+            chart2 = score_bar_chart(
+                st.session_state.get("ats_score",0),
+                match_score
+            )
+
+            st.plotly_chart(
+                chart2,
+                use_container_width=True
+            )
+
             col1, col2 = st.columns(2)
 
             with col1:
@@ -197,6 +225,12 @@ if resume_file:
                         st.error(skill)
                 else:
                     st.success("No missing skills.")
+        st.session_state["jd_score"] = match_score
+        with st.spinner("Generating Skill Recommendations..."):
+            recommendations = recommend_skills(missing_skills)
+
+        with st.expander("🎯 Skill Gap Recommendations"):
+            st.markdown(recommendations)
 
     # ------------------------------------------------
     # INTERVIEW QUESTIONS
@@ -252,6 +286,30 @@ if resume_file:
                     file_name="cover_letter.txt",
                     mime="text/plain"
                 )
+st.divider()
+
+st.subheader("📄 Export Analysis Report")
+
+if st.button("Generate PDF Report"):
+
+    pdf_file = generate_pdf_report(
+        st.session_state.get("ats_score", 0),
+        st.session_state.get("jd_score", 0),
+        st.session_state.get("skills", []),
+        st.session_state.get(
+            "ai_analysis",
+            "No analysis available"
+        )
+    )
+
+    with open(pdf_file, "rb") as file:
+
+        st.download_button(
+            label="📥 Download PDF Report",
+            data=file,
+            file_name="AI_Resume_Report.pdf",
+            mime="application/pdf"
+        )
 
 # ---------------------------------------------------
 # DASHBOARD
