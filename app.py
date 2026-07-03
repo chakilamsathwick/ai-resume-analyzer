@@ -2,6 +2,8 @@ import streamlit as st
 from src.pdf_parser import extract_text_from_pdf
 from src.ats_score import calculate_ats_score
 from src.gemini_helper import analyze_resume
+from src.jd_matcher import calculate_jd_match
+from src.interview_generator import generate_interview_questions
 
 # Page Configuration
 st.set_page_config(
@@ -42,18 +44,42 @@ with col2:
 
 st.divider()
 
+# Initialize Variables
+score = 0
+skills_found = []
+match_score = 0
+matched_skills = []
+missing_skills = []
+
 # Resume Processing
 if resume_file:
 
     st.success(f"Resume Uploaded: {resume_file.name}")
 
-    # Extract Text
+    # Extract Resume Text
     resume_text = extract_text_from_pdf(resume_file)
 
     # ATS Score
     score, skills_found = calculate_ats_score(resume_text)
+
+    # JD Match
+    if jd_text:
+        match_score, matched_skills, missing_skills = calculate_jd_match(
+            resume_text,
+            jd_text
+        )
+
+    # Gemini Resume Analysis
     with st.spinner("Analyzing Resume with Gemini AI..."):
         ai_analysis = analyze_resume(resume_text)
+
+    # Interview Questions
+    if jd_text:
+        with st.spinner("Generating Interview Questions..."):
+            interview_questions = generate_interview_questions(
+                resume_text,
+                jd_text
+            )
 
     # Resume Preview
     st.subheader("📄 Resume Text Preview")
@@ -64,18 +90,54 @@ if resume_file:
         height=300
     )
 
-    # Skills
+    # Detected Skills
     st.subheader("🛠 Detected Skills")
 
     for skill in skills_found:
         st.success(skill)
+
+    # AI Analysis
     st.divider()
 
     st.subheader("🤖 AI Resume Analysis")
 
     st.markdown(ai_analysis)
 
-# JD Upload
+    # JD Match Analysis
+    if jd_text:
+
+        st.divider()
+
+        st.subheader("🎯 Job Description Match Analysis")
+
+        col_a, col_b = st.columns(2)
+
+        with col_a:
+            st.subheader("✅ Matched Skills")
+
+            if matched_skills:
+                for skill in matched_skills:
+                    st.success(skill)
+            else:
+                st.warning("No matching skills found")
+
+        with col_b:
+            st.subheader("❌ Missing Skills")
+
+            if missing_skills:
+                for skill in missing_skills:
+                    st.error(skill)
+            else:
+                st.success("No missing skills")
+
+        # Interview Questions
+        st.divider()
+
+        st.subheader("🎤 AI Interview Questions")
+
+        st.markdown(interview_questions)
+
+# JD Upload Confirmation
 if jd_text:
     st.success("Job Description Added")
 
@@ -93,7 +155,10 @@ with col1:
         st.metric("ATS Score", "--")
 
 with col2:
-    st.metric("JD Match", "--")
+    if resume_file and jd_text:
+        st.metric("JD Match", f"{match_score}%")
+    else:
+        st.metric("JD Match", "--")
 
 with col3:
     if resume_file:
