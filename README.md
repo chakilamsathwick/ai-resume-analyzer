@@ -268,5 +268,10 @@ GitHub:
 https://github.com/chakilamsathwick
 
 ---
+# 📄 AI Resume Analyzer Pro
+
+## 🌐 Live Demo
+
+https://ai-resume-analyzer-nf86rpuxoynzn6pjj25uwe.streamlit.app/
 
 ## ⭐ If you found this project useful, give it a star!
