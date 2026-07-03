@@ -18,16 +18,76 @@ st.set_page_config(
     page_icon="📄",
     layout="wide"
 )
+st.markdown("""
+<style>
 
+/* Main Background */
+.main {
+    background-color: #0E1117;
+}
+
+/* App Title */
+h1 {
+    text-align: center;
+    color: #4CAF50;
+}
+
+/* Section Headers */
+h2, h3 {
+    color: #00C8FF;
+}
+
+/* Metric Cards */
+[data-testid="metric-container"] {
+    background-color: #1E293B;
+    border: 1px solid #334155;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Buttons */
+.stButton > button {
+    width: 100%;
+    border-radius: 10px;
+    height: 50px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* File Upload Box */
+[data-testid="stFileUploader"] {
+    border: 2px dashed #4CAF50;
+    border-radius: 12px;
+    padding: 10px;
+}
+
+/* Expander */
+.streamlit-expanderHeader {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+}
+
+</style>
+""", unsafe_allow_html=True)
 # ---------------------------------------------------
 # HEADER
 # ---------------------------------------------------
-st.title("📄 AI Resume Analyzer Pro")
-
 st.markdown("""
+# 📄 AI Resume Analyzer Pro
+
+### AI-Powered Resume Screening Platform
+
+
 Analyze resumes, calculate ATS scores, compare with Job Descriptions,
 generate interview questions, and create AI-powered cover letters.
 """)
+
 
 st.divider()
 
@@ -127,13 +187,15 @@ if resume_file:
 
         st.subheader("📊 ATS Analysis")
 
-        st.metric("ATS Score", f"{score}%")
+        st.metric(
+            label="ATS Score",
+            value=f"{score}%"
+        )
+        st.progress(score / 100)
 
         rating = get_resume_rating(score)
 
         st.success(f"Resume Rating: {rating}")
-
-        st.progress(score / 100)
 
         st.subheader("🛠 Detected Skills")
 
@@ -178,8 +240,8 @@ if resume_file:
             st.subheader("🎯 JD Match Analysis")
 
             st.metric(
-                "JD Match Score",
-                f"{match_score}%"
+                label="JD Match Score",
+                value=f"{match_score}%"
             )
 
             st.progress(match_score / 100)
@@ -321,10 +383,23 @@ st.subheader("📊 Dashboard")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("ATS Score", "--")
+    st.metric("ATS Score", score if 'score' in locals() else "--")
 
 with col2:
-    st.metric("JD Match", "--")
+    st.metric("JD Match", match_score if 'match_score' in locals() else "--")
 
 with col3:
-    st.metric("Skills Found", "--")
+    st.metric("Skills Found", len(st.session_state.get("skills", [])) if "skills" in st.session_state else "--")
+
+st.divider()
+
+st.markdown("""
+<center>
+
+Built with ❤️ using
+
+Python | Streamlit | Gemini AI | Plotly
+
+</center>
+""",
+unsafe_allow_html=True)
